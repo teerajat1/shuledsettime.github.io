@@ -1,0 +1,13 @@
+@font-face {
+    font-family: 'TLHALFTIME';
+    src: url('TL-HALFTIME.eot');
+    src: local('TL-HALFTIME'),
+        url('TL-HALFTIME.eot?#iefix') format('embedded-opentype'),
+        url('TL-HALFTIME.woff2') format('woff2'),
+        url('TL-HALFTIME.woff') format('woff'),
+        url('TL-HALFTIME.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+

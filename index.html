@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scoreboard Controller</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .draggable {
+      position: absolute;
+      cursor: move;
+    }
+    .logo, .team-name, .score, .timer {
+      padding: 5px 10px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center">
+
+  <div class="controller bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl mb-4">
+    <h2 class="text-xl font-bold mb-4">Scoreboard Controller</h2>
+
+    <!-- แถวที่ 1 -->
+    <div class="grid grid-cols-4 gap-4 mb-4">
+      <div class="input-group">
+        <label for="homeName" class="block mb-2">Team Home Name</label>
+        <input type="text" id="homeName" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter Home Team Name">
+      </div>
+      <div class="input-group">
+        <label for="awayName" class="block mb-2">Team Away Name</label>
+        <input type="text" id="awayName" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter Away Team Name">
+      </div>
+      <div class="input-group">
+        <label for="stadium" class="block mb-2">Stadium</label>
+        <input type="text" id="stadium" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter Stadium Name">
+      </div>
+      <div class="input-group">
+        <label for="tournament" class="block mb-2">Tournament</label>
+        <input type="text" id="tournament" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter Tournament Name">
+      </div>
+    </div>
+
+    <!-- แถวที่ 2 -->
+    <div class="grid grid-cols-4 gap-4 mb-4">
+      <div class="input-group">
+        <label for="logoHome" class="block mb-2">Upload Logo Home</label>
+        <input type="file" id="logoHome" class="w-full p-2 border border-gray-300 rounded">
+      </div>
+      <div class="input-group">
+        <label for="logoAway" class="block mb-2">Upload Logo Away</label>
+        <input type="file" id="logoAway" class="w-full p-2 border border-gray-300 rounded">
+      </div>
+      <div class="input-group">
+        <label for="background" class="block mb-2">Upload Background</label>
+        <input type="file" id="background" class="w-full p-2 border border-gray-300 rounded">
+      </div>
+      <div class="input-group">
+        <label for="tournamentLogo" class="block mb-2">Upload Tournament Logo</label>
+        <input type="file" id="tournamentLogo" class="w-full p-2 border border-gray-300 rounded">
+      </div>
+    </div>
+
+    <!-- แถวที่ 3 -->
+    <div class="grid grid-cols-3 gap-4 mb-4">
+      <div class="input-group">
+        <label for="scoreHome" class="block mb-2">Home Score</label>
+        <div class="flex items-center">
+          <button onclick="changeScore('home', -1)" class="bg-red-500 text-white p-2 rounded mr-2">-</button>
+          <input type="number" id="scoreHome" value="0" class="w-24 p-2 border border-gray-300 rounded text-center">
+          <button onclick="changeScore('home', 1)" class="bg-green-500 text-white p-2 rounded ml-2">+</button>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="matchTime" class="block mb-2">Set Match Time (minutes)</label>
+        <input type="number" id="matchTime" value="90" class="w-24 p-2 border border-gray-300 rounded text-center mx-auto">
+      </div>
+
+      <div class="input-group">
+        <label for="scoreAway" class="block mb-2">Away Score</label>
+        <div class="flex items-center">
+          <button onclick="changeScore('away', -1)" class="bg-red-500 text-white p-2 rounded mr-2">-</button>
+          <input type="number" id="scoreAway" value="0" class="w-24 p-2 border border-gray-300 rounded text-center">
+          <button onclick="changeScore('away', 1)" class="bg-green-500 text-white p-2 rounded ml-2">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- แถวที่ 4 -->
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div class="input-group">
+        <label for="startTime" class="block mb-2">Start Time (minutes)</label>
+        <input type="number" id="startTime" value="0" class="w-24 p-2 border border-gray-300 rounded text-center mx-auto">
+      </div>
+    </div>
+
+    <!-- แถวที่ 5 -->
+    <div class="flex space-x-4 mt-4">
+      <button onclick="startTimer()" class="bg-blue-500 text-white py-2 px-4 rounded">Start</button>
+      <button onclick="pauseTimer()" class="bg-yellow-500 text-white py-2 px-4 rounded">Pause</button>
+      <button onclick="stopTimer()" class="bg-gray-500 text-white py-2 px-4 rounded">Stop</button>
+      <button onclick="sendUpdate()" class="bg-teal-500 text-white py-2 px-4 rounded">Save & Update Display</button>
+      <button onclick="openDisplay()" class="bg-purple-500 text-white py-2 px-4 rounded">Show Display</button>
+    </div>
+  </div>
+
+  <script>
+    let timerInterval;
+    let seconds = 0;
+    let isRunning = false;
+    let targetMinutes = 0;
+    let formattedTime = "00:00";
+    const channel = new BroadcastChannel('scoreboard_channel');
+
+    function changeScore(team, amount) {
+      const scoreElement = document.getElementById(`score${team.charAt(0).toUpperCase() + team.slice(1)}`);
+      let score = parseInt(scoreElement.value);
+      score += amount;
+      scoreElement.value = Math.max(0, score);  // Prevent negative scores
+      sendUpdate();
+    }
+
+    function startTimer() {
+      if (isRunning) return;
+      isRunning = true;
+      targetMinutes = parseInt(document.getElementById('startTime').value);  // ใช้ค่า Start Time
+      seconds = targetMinutes * 60;  // ตั้งค่าเริ่มต้นเป็นจำนวนวินาทีจากนาที
+      timerInterval = setInterval(() => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        formattedTime = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        sendUpdate();
+        seconds++;  // เพิ่มจำนวนวินาทีเพื่อให้เวลาเพิ่มขึ้น
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      clearInterval(timerInterval);
+      isRunning = false;
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      seconds = 0;
+      formattedTime = "00:00";
+      isRunning = false;
+      sendUpdate();
+    }
+
+    function openDisplay() {
+      window.open("display.html", "_blank", "width=1280,height=720");
+    }
+
+    let logoHomeDataURL = "";
+    let logoAwayDataURL = "";
+    let backgroundDataURL = "/img/BG.png";
+
+    document.getElementById('logoHome').addEventListener('change', e => loadFileToDataURL(e.target.files[0], url => logoHomeDataURL = url));
+    document.getElementById('logoAway').addEventListener('change', e => loadFileToDataURL(e.target.files[0], url => logoAwayDataURL = url));
+    document.getElementById('background').addEventListener('change', e => loadFileToDataURL(e.target.files[0], url => backgroundDataURL = url));
+
+    function loadFileToDataURL(file, callback) {
+      const reader = new FileReader();
+      reader.onload = () => callback(reader.result);
+      reader.readAsDataURL(file);
+    }
+
+    function sendUpdate() {
+      channel.postMessage({
+        type: 'update',
+        homeName: document.getElementById('homeName').value,
+        awayName: document.getElementById('awayName').value,
+        scoreHome: document.getElementById('scoreHome').value,
+        scoreAway: document.getElementById('scoreAway').value,
+        timer: formattedTime,
+        logoHome: logoHomeDataURL,
+        logoAway: logoAwayDataURL,
+        background: backgroundDataURL,
+        stadium: document.getElementById('stadium').value,
+        tournament: document.getElementById('tournament').value
+      });
+    }
+  </script>
+</body>
+</html>

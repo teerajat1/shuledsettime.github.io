@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scoreboard Display</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+    @font-face {
+        font-family: 'TLHALFTIME';
+        src: url('TL-HALFTIME.eot');
+        src: local('TLHALFTIME'),
+            url('TL-HALFTIME.eot?#iefix') format('embedded-opentype'),
+            url('TL-HALFTIME.woff2') format('woff2'),
+            url('TL-HALFTIME.woff') format('woff'),
+            url('TL-HALFTIME.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    #display {
+      width: 1920px;
+      height: 1080px;
+      position: relative;
+      background: #222;
+      margin: auto;
+      background-size: cover;
+      background-position: center;
+    }
+    .element {
+      position: absolute;
+      padding: 5px 10px;
+      color: #fff;
+      cursor: move;
+    }
+    .score {
+        position: absolute;
+        width: 350px;
+        height: 350px;
+        background: transparent;
+        color: #fff;
+        text-align: center;
+        line-height: 350px;
+        font-size: 400px;
+        cursor: move;
+        font-family: 'TLHALFTIME';
+    }
+    .logo {
+        position: absolute;
+        width: 350px;
+        height: 350px;
+        object-fit: contain;
+        cursor: move;
+    }
+    .guideline {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.2);
+        z-index: 1000;
+    }
+    .guideline.h {
+        height: 1px;
+        width: 100%;
+    }
+    .guideline.v {
+        width: 1px;
+        height: 100%;
+    }
+    .stadium {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 150px;
+        font-size: 80px;
+        background: rgba(0, 0, 0, 0.315);
+        font-family: 'TLHALFTIME';
+    }
+    .homeName, .awayName {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 350px;
+        height: 80px; 
+        font-size: 25px;
+        font-family: 'TLHALFTIME';
+
+    }
+    .tournament {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 80px;
+        font-size: 50px;
+        font-family: 'TLHALFTIME';
+    }
+    .timer {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        width: 500px;
+        height: 150px;
+        font-size: 170px;
+        font-weight: 600;
+        color: #ffffff;
+        font-family: 'TLHALFTIME';
+    }
+    .Tournament {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 300px;
+        top: 550px;
+
+    }
+    .logoTournament {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 300px;
+        height: 300px;
+        object-fit: contain;
+        cursor: move;
+    }
+  </style>
+</head>
+<body>
+  <div id="display">
+    <div class="Tournament">
+        <img class="logoTournament"  src="/img/Tournament.png" alt="">
+    </div>
+  </div>
+  <script>
+    const display = document.getElementById('display');
+    
+    // ใช้ createElement ที่รับพารามิเตอร์ className เพิ่มเติม
+    const scoreHome = createElement('0', 100, 550, 'score');
+    const scoreAway = createElement('0', 1470, 550, 'score');
+    const homeName = createElement('Team Home', 100, 50, 'homeName');
+    const awayName = createElement('Team Away', 1470, 50, 'awayName');
+    const timer = createElement('00:00', 710, 250, 'timer');
+    const stadium = createElement('สนามโคกตะเคียน เมน สเตเดียม', 0, 950, 'stadium');
+    const tournament = createElement('', 0, 850, 'tournament');
+    
+    // เพิ่ม logo ของทัวร์นาเมนต์
+    const elements = {
+      homeName: homeName,
+      scoreHome: scoreHome,
+      awayName: awayName,
+      scoreHome: scoreHome,
+      scoreAway: scoreAway,
+      timer: timer,
+      stadium: stadium,
+      tournament: tournament
+    };
+
+    for (const el of Object.values(elements)) display.appendChild(el);
+
+    const logoHome = createImageElement(100, 150);
+    const logoAway = createImageElement(1470, 150);
+    display.appendChild(logoHome);
+    display.appendChild(logoAway);
+
+    // ฟังก์ชันสร้าง element ใหม่
+    function createElement(text, left, top, className = '') {
+      const div = document.createElement('div');
+      div.className = 'element ' + className;  // เพิ่มคลาส
+      div.innerText = text;
+      div.style.left = `${left}px`;
+      div.style.top = `${top}px`;
+      makeDraggable(div);
+      return div;
+    }
+
+    // ฟังก์ชันสร้าง image element
+    function createImageElement(left, top) {
+      const img = document.createElement('img');
+      img.className = 'logo';
+      img.src = '';  // ใส่ URL ของโลโก้ทัวร์นาเมนต์ที่นี่
+      img.style.left = `${left}px`;
+      img.style.top = `${top}px`;
+      makeDraggable(img);
+      return img;
+    }
+
+    function makeDraggable(el) {
+      let isDragging = false, offsetX, offsetY;
+
+      el.addEventListener('mousedown', e => {
+        isDragging = true;
+        offsetX = e.offsetX;
+        offsetY = e.offsetY;
+        drawGuidelines();
+        e.preventDefault();
+      });
+
+      window.addEventListener('mouseup', () => {
+        isDragging = false;
+        removeGuidelines();
+      });
+
+      window.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+        el.style.left = `${e.clientX - offsetX}px`;
+        el.style.top = `${e.clientY - offsetY}px`;
+      });
+    }
+
+    function drawGuidelines() {
+      for (let y = 0; y <= 1080; y += 50) {
+        const hLine = document.createElement('div');
+        hLine.className = 'guideline h';
+        hLine.style.top = `${y}px`;
+        display.appendChild(hLine);
+      }
+      for (let x = 0; x <= 1920; x += 50) {
+        const vLine = document.createElement('div');
+        vLine.className = 'guideline v';
+        vLine.style.left = `${x}px`;
+        display.appendChild(vLine);
+      }
+    }
+
+    function removeGuidelines() {
+      document.querySelectorAll('.guideline').forEach(g => g.remove());
+    }
+
+    const channel = new BroadcastChannel('scoreboard_channel');
+    channel.onmessage = e => {
+      const d = e.data;
+      if (d.type === 'update') {
+        elements.homeName.innerText = d.homeName;
+        elements.awayName.innerText = d.awayName;
+        elements.scoreHome.innerText = d.scoreHome;
+        elements.scoreAway.innerText = d.scoreAway;
+        elements.timer.innerText = d.timer;
+        elements.stadium.innerText = d.stadium;
+        elements.tournament.innerText = d.tournament;
+        
+        if (d.logoHome) logoHome.src = d.logoHome;
+        if (d.logoAway) logoAway.src = d.logoAway;
+        if (d.background) display.style.backgroundImage = `url(${d.background})`;
+      }
+    };
+  </script>
+</body>
+</html>
